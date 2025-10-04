@@ -1,71 +1,36 @@
-// server.js - Starter Express server for Week 2 assignment
+import express from "express";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import morgan from "morgan";
+import cors from "cors";
+import logger from "./middleware/logger.js";
+import auth from "./middleware/auth.js";
+import errorHandler from "./middleware/errorHandler.js";
+import productRoutes from "./routes/productRoutes.js";
 
-// Import required modules
-const express = require('express');
-const bodyParser = require('body-parser');
-const { v4: uuidv4 } = require('uuid');
-
-// Initialize Express app
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware setup
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(cors());
+app.use(morgan("dev"));
+app.use(logger);
 
-// Sample in-memory products database
-let products = [
-  {
-    id: '1',
-    name: 'Laptop',
-    description: 'High-performance laptop with 16GB RAM',
-    price: 1200,
-    category: 'electronics',
-    inStock: true
-  },
-  {
-    id: '2',
-    name: 'Smartphone',
-    description: 'Latest model with 128GB storage',
-    price: 800,
-    category: 'electronics',
-    inStock: true
-  },
-  {
-    id: '3',
-    name: 'Coffee Maker',
-    description: 'Programmable coffee maker with timer',
-    price: 50,
-    category: 'kitchen',
-    inStock: false
-  }
-];
+// Protected routes (require API key)
+app.use("/api/products", auth, productRoutes);
 
 // Root route
-app.get('/', (req, res) => {
-  res.send('Welcome to the Product API! Go to /api/products to see all products.');
+app.get("/", (req, res) => {
+  res.send("Welcome to the Express.js RESTful API with Middleware 🧠");
 });
 
-// TODO: Implement the following routes:
-// GET /api/products - Get all products
-// GET /api/products/:id - Get a specific product
-// POST /api/products - Create a new product
-// PUT /api/products/:id - Update a product
-// DELETE /api/products/:id - Delete a product
+// Error handler (must come last)
+app.use(errorHandler);
 
-// Example route implementation for GET /api/products
-app.get('/api/products', (req, res) => {
-  res.json(products);
-});
+const PORT = process.env.PORT || 5000;
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// TODO: Implement custom middleware for:
-// - Request logging
-// - Authentication
-// - Error handling
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-// Export the app for testing purposes
-module.exports = app; 
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
